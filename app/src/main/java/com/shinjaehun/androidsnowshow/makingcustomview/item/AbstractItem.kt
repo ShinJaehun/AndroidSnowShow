@@ -1,7 +1,6 @@
-package com.shinjaehun.androidsnow.makingcustomview.item
+package com.shinjaehun.androidsnowshow.makingcustomview.item
 
 import android.graphics.Paint
-import android.graphics.Path
 
 abstract class AbstractItem {
 

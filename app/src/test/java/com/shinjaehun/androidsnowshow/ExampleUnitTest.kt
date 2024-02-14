@@ -1,4 +1,4 @@
-package com.shinjaehun.androidsnow
+package com.shinjaehun.androidsnowshow
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package com.shinjaehun.androidsnow.makingcustomview
+package com.shinjaehun.androidsnowshow.makingcustomview
 
 import android.content.Context
 import android.graphics.Canvas
@@ -7,9 +7,9 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import com.shinjaehun.androidsnow.R
-import com.shinjaehun.androidsnow.makingcustomview.item.AbstractItem
-import com.shinjaehun.androidsnow.makingcustomview.item.SnowItem
+import com.shinjaehun.androidsnowshow.R
+import com.shinjaehun.androidsnowshow.makingcustomview.item.AbstractItem
+import com.shinjaehun.androidsnowshow.makingcustomview.item.SnowItem
 import java.util.*
 
 private const val TAG = "EffectView"

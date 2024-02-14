@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MakingCustomViewActivity">
 
-    <com.shinjaehun.androidsnow.makingcustomview.EffectView
+    <com.shinjaehun.androidsnowshow.makingcustomview.EffectView
         android:id="@+id/effectView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

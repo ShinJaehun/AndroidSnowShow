@@ -1,6 +1,5 @@
-package com.shinjaehun.androidsnow.makingcustomview.item
+package com.shinjaehun.androidsnowshow.makingcustomview.item
 
-import android.util.Log
 import java.util.*
 
 private const val TAG = "SnowItem"

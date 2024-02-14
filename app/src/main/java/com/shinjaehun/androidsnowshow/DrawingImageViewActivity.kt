@@ -1,8 +1,7 @@
-package com.shinjaehun.androidsnow
+package com.shinjaehun.androidsnowshow
 
 import android.content.Context
 import android.graphics.Point
-import android.os.Build.VERSION_CODES.P
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler

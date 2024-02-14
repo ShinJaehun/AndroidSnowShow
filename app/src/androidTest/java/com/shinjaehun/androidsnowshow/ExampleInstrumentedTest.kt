@@ -1,4 +1,4 @@
-package com.shinjaehun.androidsnow
+package com.shinjaehun.androidsnowshow
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

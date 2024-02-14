@@ -1,4 +1,4 @@
-package com.shinjaehun.androidsnow
+package com.shinjaehun.androidsnowshow
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity

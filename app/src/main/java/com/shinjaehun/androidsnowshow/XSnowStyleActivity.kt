@@ -1,18 +1,16 @@
-package com.shinjaehun.androidsnow
+package com.shinjaehun.androidsnowshow
 
 import android.content.Context
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.NonDisposableHandle.parent
 import java.util.*
 
 private const val TAG = "XSnowStyleActivity"

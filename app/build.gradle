@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.shinjaehun.androidsnow'
+    namespace 'com.shinjaehun.androidsnowshow'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.shinjaehun.androidsnow"
+        applicationId "com.shinjaehun.androidsnowshow"
         minSdk 24
         targetSdk 33
         versionCode 1
