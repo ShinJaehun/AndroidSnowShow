@@ -52,10 +52,14 @@ class XSnowStyleActivity : AppCompatActivity() {
         const val storm_lag_S = 60.0 // no-storm in seconds
         const val storm_YperX: Float = 1/3f // storm's max. vy/vx ratio
 
-        var refresh_FperS = 20f					// initial frames/second, recalculated.
-        var refresh 	  = 1000/refresh_FperS;	// ms/frame
+//        var refresh_FperS = 20f					// initial frames/second, recalculated.
+//        var refresh 	  = 1000/refresh_FperS;	// ms/frame
+
+        var refresh_FperS = 100f					// initial frames/second, recalculated.
+
+
         var timer_id = 0
-        var timer_sum = refresh
+//        var timer_sum = refresh
         var timer_count = 1
         var flake_id	  = 0		// timer id of make_flake_visible
 
@@ -147,7 +151,7 @@ class XSnowStyleActivity : AppCompatActivity() {
                     false,
 //                    flakeDX,
 //                    flakeDY,
-                    flake_speed
+//                    flake_speed
                 )
             )
         }
@@ -349,7 +353,7 @@ class XSnowStyleActivity : AppCompatActivity() {
         private val flake_visible: Boolean,
 //        private val flakeDX: Int,
 //        private val flakeDY: Int,
-        private val flake_speed: Float
+//        private val flake_speed: Float
     ) {
 //        private val snowRes: IntArray = intArrayOf(R.drawable.snow0, R.drawable.snow1, R.drawable.snow2, R.drawable.snow3, R.drawable.snow4, R.drawable.snow5, R.drawable.snow6)
 //        private var iv: ImageView = ImageView(context)
@@ -358,8 +362,8 @@ class XSnowStyleActivity : AppCompatActivity() {
         var iv: ImageView
         var flakeX: Float
         var flakeY: Float
-//        var flakeSX: Float
-//        var flakeVX: Float
+        var flakeSX: Float
+        var flakeVX: Float
         var flakeVY: Float
         // 근데 왜 flakeVY는 처음 실행할 때 2.22 얼마얼마인데 activity를 종료하고 다시 실행하면 1.0이 되는거야????
         var flakeVIS: Boolean
@@ -376,8 +380,8 @@ class XSnowStyleActivity : AppCompatActivity() {
             flakeX = Random().nextFloat() * screenW
             flakeY = Random().nextFloat() * screenH
 //            flakeY = 0f
-//            flakeSX = 0f
-//            flakeVX = 0f
+            flakeSX = 0f
+            flakeVX = 0f
             flakeVY = 1f
             flakeVIS = flake_visible
 
@@ -398,13 +402,13 @@ class XSnowStyleActivity : AppCompatActivity() {
 //            flakeX += flakeVX + flakeDX
 //            flakeY += flakeVY + flakeDY
 
-//            flakeX += flakeVX
+            flakeX += flakeVX
             flakeY += flakeVY
 
             if (flakeY > screenH - disappear_margin) {
                 flakeX = Random().nextFloat() * screenW
                 flakeY = 0f
-                flakeVY = (Random().nextFloat() * flake_speed) + flake_speed
+                flakeVY = flakeVY.plus((Random().nextFloat() * flake_speed) + flake_speed)
 
 //                Log.i(TAG, "new flakeVY: $flakeVY")
 //                Log.i(TAG, "new flake_speed: $flake_speed")
@@ -414,14 +418,18 @@ class XSnowStyleActivity : AppCompatActivity() {
             }
 
 //            Log.i(TAG, "flakeVIS: $flakeVIS")
-            Log.i(TAG, "flakeVY: $flakeVY")
+//            Log.i(TAG, "flakeVY: $flakeVY")
 //            Log.i(TAG, "flake_speed: $flake_speed")
 
-//            flakeSX--
-//            if (flakeSX <= 0) {
-//                flakeSX = Random().nextFloat() * refresh_FperS.toFloat() * flake_TX
-//                flakeVX = (2f*Random().nextFloat()-1f) * flake_XperY * flake_speed
-//            }
+            flakeSX--
+            if (flakeSX <= 0) {
+                flakeSX = Random().nextFloat() * refresh_FperS * flake_TX
+                flakeVX = (2f*Random().nextFloat()-1f) * flake_XperY * flake_speed
+//                flakeSX = Random().nextFloat() * flake_TX
+//                flakeVX = (2f * Random().nextFloat() - 1f) * flake_speed
+            }
+
+//            Log.i(TAG, "refresh_FperS: $refresh_FperS")
 
             if (flakeX < -disappear_margin)
                 flakeX += screenW.toInt()
