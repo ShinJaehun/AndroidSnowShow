@@ -408,7 +408,7 @@ class XSnowStyleActivity : AppCompatActivity() {
             if (flakeY > screenH - disappear_margin) {
                 flakeX = Random().nextFloat() * screenW
                 flakeY = 0f
-                flakeVY = flakeVY.plus((Random().nextFloat() * flake_speed) + flake_speed)
+                flakeVY = (Random().nextFloat() * flakeVY) + flake_speed
 
 //                Log.i(TAG, "new flakeVY: $flakeVY")
 //                Log.i(TAG, "new flake_speed: $flake_speed")
