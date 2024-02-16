@@ -5,13 +5,20 @@ import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.shinjaehun.androidsnowshow.XSnowStyleActivity.Companion.refresh_FperS
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.util.*
+import kotlin.math.floor
 
 private const val TAG = "XSnowStyleActivity"
 
@@ -22,7 +29,18 @@ class XSnowStyleActivity : AppCompatActivity() {
         var screenHeight = 0
         var screenWidth = 0
 
-        var bgHandler = Handler()
+        var snowList: ArrayList<SnowFlake> = ArrayList()
+
+        //        val bgHandler: Handler = Handler()
+        lateinit var bgHandler: Handler
+        lateinit var runnable: Runnable
+        var isNotPaused = true
+
+        var job1: Job = Job()
+
+        //lateinit var ttimer : Timer
+        var ttimerState = false
+//        var bgHandlerState = false
 
         const val disappear_margin = 32				// pixels from each border where objects disappear
         const val flakes = 25 // total number of flakes
@@ -32,13 +50,20 @@ class XSnowStyleActivity : AppCompatActivity() {
         const val flake_XperY: Float = 2f // fluttering movement's max. vx/vy ratio
         const val strom_duration_S = 10.0 // storm duration in seconds: about 1-2 seconds for deceleration
         const val storm_lag_S = 60.0 // no-storm in seconds
-
         const val storm_YperX: Float = 1/3f // storm's max. vy/vx ratio
-        const val refresh_FperS = 20					// initial frames/second, recalculated.
 
-        const val refresh 	  = 1000/refresh_FperS;	// ms/frame
+        var refresh_FperS = 20f					// initial frames/second, recalculated.
+        var refresh 	  = 1000/refresh_FperS;	// ms/frame
+        var timer_id = 0
+        var timer_sum = refresh
+        var timer_count = 1
+        var flake_id	  = 0		// timer id of make_flake_visible
 
+        var flake_speed 	= 0.3f				// flake speed in pixel/frame
+//        var flake_visible = false
 
+        var flakeDX  = 0			// X-movement in pixel/frame, caused by storm
+        var flakeDY  = 0			// Y-movement in pixel/frame, caused by storm
     }
 
     var storm_speed 	= 0				// storm speed in pixel/frame
@@ -49,14 +74,6 @@ class XSnowStyleActivity : AppCompatActivity() {
     var storm_id    	= 0				// ID of storm timer
 
     var storm_blowing	= 1				// start with storm=ON
-
-    var flake_speed 	= 0f				// flake speed in pixel/frame
-    var flake_visible = false
-
-    var flakeDX  = 0			// X-movement in pixel/frame, caused by storm
-    var flakeDY  = 0			// Y-movement in pixel/frame, caused by storm
-
-    var flake_id	  = 0		// timer id of make_flake_visible
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,27 +93,60 @@ class XSnowStyleActivity : AppCompatActivity() {
             screenWidth = point.x
             screenHeight = point.y
         }
-        Log.i(TAG, " screenWidth: $screenWidth, screenHeight: $screenHeight")
+//        Log.i(TAG, " screenWidth: $screenWidth, screenHeight: $screenHeight")
+//
+//        Log.i(TAG, "oncreate refresh: $refresh")
 
+//        bgHandler = Handler()
         setUpSnowEffect()
+//        rebuild_speed_timer()
+//        move_snow()
+
+        job1 = lifecycleScope.launch {
+            withContext(Dispatchers.Main) {
+                updateSnowFlakes(10L)
+            }
+        }
+
     }
 
-    lateinit var r: Runnable
-    var snowList: ArrayList<Snow> = ArrayList()
+
+    override fun onDestroy() {
+        super.onDestroy()
+//        bgHandler.removeCallbacksAndMessages(null);
+
+//        if (ttimerState) {
+//            ttimerState = false
+//            ttimer.cancel()
+//        }
+//        if (bgHandlerState) {
+//            bgHandlerState = false
+//            bgHandler.removeCallbacksAndMessages(null)
+//        bgHandler.removeCallbacks(runnable)
+//        }
+    }
+
+//    override fun onStop() {
+//        super.onStop()
+//        bgHandler.removeCallbacks(runnable)
+//
+//   }
+
+//    lateinit var r: Runnable
 
     fun setUpSnowEffect() {
         // generate 200 snow flake
         var container: ViewGroup = window.decorView as ViewGroup
         for (i in 0 until 30) {
             snowList.add(
-                Snow(
+                SnowFlake(
                     baseContext,
                     container,
                     screenWidth.toFloat(),
                     screenHeight.toFloat(),
-                    true,
-                    flakeDX,
-                    flakeDY,
+                    false,
+//                    flakeDX,
+//                    flakeDY,
                     flake_speed
                 )
             )
@@ -105,33 +155,214 @@ class XSnowStyleActivity : AppCompatActivity() {
         Log.i(TAG, "the size of snowList: ${snowList.size}")
 
         // setup runnable and postDelay
-        r = Runnable {
-            for (snow: Snow in snowList)
-                snow.update()
-            bgHandler.postDelayed(r, 10)
-        }
-        bgHandler.post(r)
+//        if (bgHandlerState) {
+//            bgHandler.removeCallbacksAndMessages(null)
+//        } else {
+//            r = Runnable {
+//                bgHandlerState = true
+//                for (snow: SnowFlake in snowList)
+//                    snow.update()
+//                bgHandler.postDelayed(r, 10)
+//            }
+//            bgHandler.post(r)
+//        }
     }
 
-    class Snow(
+//    fun move_snow(){
+//        val beginn = System.currentTimeMillis()
+//        job1 = lifecycleScope.launch {
+//            withContext(Dispatchers.Main) {
+////                updateSnowFlakes()
+//            }
+//        }
+//        val ende = System.currentTimeMillis()
+//        val diff = if (beginn > ende) 1000 + ende - beginn else ende - beginn
+//        timer_sum += diff
+//        timer_count ++
+//
+//        Log.i(TAG, "timer_sum: $timer_sum")
+//        Log.i(TAG, "timer_count: $timer_count")
+//
+//        if (timer_count>10) {
+//            rebuild_speed_timer()
+//        }
+//    }
+
+//    fun rebuild_speed_timer() {
+//        val old = refresh_FperS
+//
+//        refresh = floor(timer_sum / timer_count * 2) + 10
+//        refresh_FperS = floor(1000 / refresh)
+//        flake_speed = flake_speed_PperS / refresh_FperS
+//
+//        Log.i(TAG, "flake_speed : $flake_speed")
+//
+//        if (job1.isActive) job1.cancel()
+//        job1 = lifecycleScope.launch {
+//            withContext(Dispatchers.Main) {
+//
+//                if (old != refresh_FperS) {
+//                    Log.i(TAG, "이건가요?")
+//                    var ratio = old / refresh_FperS
+//                    for (snow: SnowFlake in snowList) {
+////                snow.flakeSX*=ratio
+////                snow.flakeVX*=ratio
+//                        snow.flakeVY*=ratio
+//                        Log.i(TAG, "vy in 이건가요: ${snow.flakeVY}" )
+//                    }
+//                }
+//
+////                updateSnowFlakes()
+//            }
+//        }
+//
+//
+////        r = Runnable {
+////            for (snow: SnowFlake in snowList) {
+////                snow.update()
+////                Log.i(TAG, "hey")
+////            }
+////            bgHandler.postDelayed(r, 10)
+////        }
+////        bgHandler.post(r)
+//
+////        runOnInterval({
+////            for (snow: SnowFlake in snowList) {
+////                snow.update()
+//////                Log.i(TAG, "hey")
+////            }
+////        }, refresh.toLong())
+//
+////        runOnInterval({
+////            for (snow: SnowFlake in snowList) {
+////                snow.update()
+//////                Log.i(TAG, "hey")
+////            }
+////        }, 10)
+//
+////        val runnable = object : Runnable {
+////            override fun run() {
+////                for (snow: SnowFlake in snowList) {
+////                    snow.update()
+////                    Log.i(TAG, "hey")
+////                }
+////
+////                bgHandler.postDelayed(this, 1000)
+////            }
+////        }
+////        bgHandler.post(runnable)
+////        bgHandler.removeCallbacks(runnable)
+//
+////        runOnInterval({
+////            for (snow: SnowFlake in snowList) {
+////                snow.update()
+////                Log.i(TAG, "hey")
+////            }
+////        }, refresh.toLong())
+//
+//
+////        if (ttimerState) {
+////            ttimer.cancel()
+////        } else {
+////            ttimer = Timer()
+////            val ttimerTask = object: TimerTask() {
+////                override fun run() {
+////                    ttimerState = true
+////                    for (snow: SnowFlake in snowList)
+////                        snow.update()
+////                    Log.i(TAG, "hey")
+////                }
+////            }
+////            ttimer.scheduleAtFixedRate(ttimerTask, 0, refresh.toLong())
+////        }
+//
+////        withContext(Dispatchers.Main) {
+////            ttimerState = true
+////
+////            for (snow: SnowFlake in snowList){
+////                snow.update()
+////                Log.i(TAG, "hey")
+////            }
+////
+////            delay(10)
+////        }
+//        Log.i(TAG, "rebuild_speed_timer refresh: $refresh")
+//
+////        if (old != refresh_FperS) {
+////            Log.i(TAG, "이건가요?")
+////            var ratio = old / refresh_FperS
+////            for (snow: SnowFlake in snowList) {
+//////                snow.flakeSX*=ratio
+//////                snow.flakeVX*=ratio
+////                snow.flakeVY*=ratio
+////            }
+////        }
+//
+//        timer_count /= 2
+//        timer_sum /= 2
+//    }
+
+    suspend fun updateSnowFlakes(delay_refresh: Long){
+        while (isNotPaused) {
+            for (snow: SnowFlake in snowList){
+                snow.update()
+//                Log.i(TAG, "hey")
+            }
+            delay(delay_refresh)
+        }
+    }
+
+
+//    inline fun runOnTimeout(crossinline block: () -> Unit, timeoutMillis: Long) {
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            block()
+//        }, timeoutMillis)
+//    }
+
+//    inline fun runOnInterval(crossinline block: () -> Unit, interval: Long): Runnable {
+//        val runnable = object : Runnable {
+//            override fun run() {
+//                block()
+//                bgHandler.postDelayed(this, interval)
+//            }
+//        }
+//        bgHandler.post(runnable)
+////        bgHandler.postDelayed(runnable, interval)
+//        return runnable
+//    }
+
+//    inline fun runOnInterval(crossinline block: () -> Unit, interval: Long) {
+//        val runnable = object : Runnable {
+//            override fun run() {
+//                block()
+//                bgHandler.postDelayed(this, interval)
+//            }
+//        }
+//        bgHandler.post(runnable)
+//    }
+
+    class SnowFlake(
         context: Context,
         parent: ViewGroup,
         private val screenW: Float,
         private val screenH: Float,
         private val flake_visible: Boolean,
-        private val flakeDX: Int,
-        private val flakeDY: Int,
+//        private val flakeDX: Int,
+//        private val flakeDY: Int,
         private val flake_speed: Float
     ) {
-        private val snowRes: IntArray = intArrayOf(R.drawable.snow0, R.drawable.snow1, R.drawable.snow2, R.drawable.snow3, R.drawable.snow4, R.drawable.snow5, R.drawable.snow6)
-        private var iv: ImageView = ImageView(context)
+//        private val snowRes: IntArray = intArrayOf(R.drawable.snow0, R.drawable.snow1, R.drawable.snow2, R.drawable.snow3, R.drawable.snow4, R.drawable.snow5, R.drawable.snow6)
+//        private var iv: ImageView = ImageView(context)
 
-        var flakeX = 0
-        var flakeY = 0
-        var flakeSX: Float = 0f
-        var flakeVX: Float = 0f
-        var flakeVY: Float = 0f
-        var flakeVIS = false
+        var snowRes: IntArray
+        var iv: ImageView
+        var flakeX: Float
+        var flakeY: Float
+//        var flakeSX: Float
+//        var flakeVX: Float
+        var flakeVY: Float
+        // 근데 왜 flakeVY는 처음 실행할 때 2.22 얼마얼마인데 activity를 종료하고 다시 실행하면 1.0이 되는거야????
+        var flakeVIS: Boolean
 
 //        private var distance = 0.7f // 0.5 ~ 1.0f
 //        private var randomParam = 0.0f // -0.3 ~ 0.3 f for some special effects
@@ -139,39 +370,58 @@ class XSnowStyleActivity : AppCompatActivity() {
 //        private val windSpeed = 4
 
         init {
-            flakeX = (Random().nextFloat() * screenW).toInt()
-            flakeY = (Random().nextFloat() * screenH).toInt()
-            flakeSX = 0f
-            flakeVX = 0f
+            snowRes = intArrayOf(R.drawable.snow0, R.drawable.snow1, R.drawable.snow2, R.drawable.snow3, R.drawable.snow4, R.drawable.snow5, R.drawable.snow6)
+            iv = ImageView(context)
+
+            flakeX = Random().nextFloat() * screenW
+            flakeY = Random().nextFloat() * screenH
+//            flakeY = 0f
+//            flakeSX = 0f
+//            flakeVX = 0f
             flakeVY = 1f
             flakeVIS = flake_visible
 
 //            randomParam = Random().nextFloat() * 0.6f - 0.3f
 //            distance = Random().nextFloat() * 0.5f + 0.5f
-            iv.setBackgroundResource(snowRes[Random().nextInt(6)])
+            iv!!.setBackgroundResource(snowRes!![Random().nextInt(6)])
             parent.addView(iv)
 
             // size
-            iv.layoutParams.height = (screenH * 0.01).toInt()
-            iv.layoutParams.width = (screenH * 0.01).toInt()
+//            iv!!.layoutParams.height = (screenH * 0.01).toInt()
+//            iv!!.layoutParams.width = (screenH * 0.01).toInt()
+            iv.layoutParams.height = FrameLayout.LayoutParams.WRAP_CONTENT
+            iv.layoutParams.width = FrameLayout.LayoutParams.WRAP_CONTENT
+
         }
 
         fun update() {
-            flakeX += (flakeVX + flakeDX).toInt()
-            flakeY += (flakeVY + flakeDY).toInt()
+//            flakeX += flakeVX + flakeDX
+//            flakeY += flakeVY + flakeDY
+
+//            flakeX += flakeVX
+            flakeY += flakeVY
+
             if (flakeY > screenH - disappear_margin) {
-                flakeX = (Random().nextFloat() * screenW).toInt()
-                flakeY = 0
-                flakeVY = flake_speed + Random().nextFloat() * flake_speed
-                if (Random().nextFloat()<0.1) flakeVY *= 2
-                if (flake_visible) flakeVIS=true
+                flakeX = Random().nextFloat() * screenW
+                flakeY = 0f
+                flakeVY = (Random().nextFloat() * flake_speed) + flake_speed
+
+//                Log.i(TAG, "new flakeVY: $flakeVY")
+//                Log.i(TAG, "new flake_speed: $flake_speed")
+
+                if (Random().nextFloat() < 0.1) flakeVY *= 2
+                if (!flake_visible) flakeVIS = true
             }
 
-            flakeSX--
-            if (flakeSX <= 0) {
-                flakeSX = Random().nextFloat() * refresh_FperS.toFloat() * flake_TX
-                flakeVX = (2f*Random().nextFloat()-1f) * flake_XperY * flake_speed
-            }
+//            Log.i(TAG, "flakeVIS: $flakeVIS")
+            Log.i(TAG, "flakeVY: $flakeVY")
+//            Log.i(TAG, "flake_speed: $flake_speed")
+
+//            flakeSX--
+//            if (flakeSX <= 0) {
+//                flakeSX = Random().nextFloat() * refresh_FperS.toFloat() * flake_TX
+//                flakeVX = (2f*Random().nextFloat()-1f) * flake_XperY * flake_speed
+//            }
 
             if (flakeX < -disappear_margin)
                 flakeX += screenW.toInt()
@@ -179,8 +429,8 @@ class XSnowStyleActivity : AppCompatActivity() {
                 flakeX -= screenW.toInt()
 
             if (flakeVIS) {
-                iv.translationX = flakeX.toFloat()
-                iv.translationY = flakeY.toFloat()
+                iv!!.translationX = flakeX
+                iv!!.translationY = flakeY
             }
 
             // far=slow, close=fast
@@ -192,7 +442,6 @@ class XSnowStyleActivity : AppCompatActivity() {
 //            if (iv.translationX > screenW)
 //                iv.translationX = iv.translationX - screenW
 //            iv.rotation = iv.rotation +  randomParam * 5 // rotation parameter
-
 
         }
     }
